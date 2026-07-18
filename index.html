@@ -1,0 +1,1582 @@
+<!--
+MIT License
+
+Copyright (c) 2026 goodvecn-dev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f3efe6">
+  <title>排版邓 · 富文本复制</title>
+  <style data-bundle="styles">
+:root {
+  --paper: #f3efe6;
+  --paper-deep: #e4dacb;
+  --ink: #27231f;
+  --muted: #756b61;
+  --red: #c73b2f;
+  --red-dark: #a93228;
+  --line: rgba(63, 51, 39, 0.16);
+  --white: #fffdf8;
+  font-family: "Songti SC", "STSong", Georgia, serif;
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--paper);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,.48), transparent 42%),
+    var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, textarea, input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .28;
+  background-image: radial-gradient(rgba(53, 43, 34, .16) .55px, transparent .7px);
+  background-size: 7px 7px;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 42px clamp(22px, 4vw, 68px) 0;
+}
+
+.masthead {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) auto;
+  gap: 26px;
+  align-items: start;
+  padding-bottom: 46px;
+  animation: rise .5s ease-out both;
+}
+
+.brand {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  color: #fff;
+  background: var(--red);
+  box-shadow: 9px 9px 0 rgba(73, 49, 37, .12);
+}
+
+.brand-hanzi {
+  position: absolute;
+  top: 8px;
+  left: 19px;
+  font-size: 39px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.brand-en {
+  position: absolute;
+  left: 20px;
+  bottom: 6px;
+  font-family: Georgia, serif;
+  font-size: 8px;
+  letter-spacing: .18em;
+}
+
+.title-block {
+  min-width: 0;
+}
+
+.kicker {
+  color: var(--red);
+  font-family: Georgia, serif;
+  font-size: 11px;
+  letter-spacing: .15em;
+}
+
+.title-block h1 {
+  margin: 8px 0 4px;
+  font-size: clamp(28px, 3.2vw, 46px);
+  line-height: 1.2;
+  letter-spacing: .035em;
+}
+
+.title-block p {
+  margin: 0;
+  color: var(--muted);
+  font-family: "PingFang SC", sans-serif;
+  font-size: 14px;
+}
+
+.format-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: Georgia, serif;
+  font-size: 10px;
+  letter-spacing: .12em;
+  background: rgba(255,255,255,.38);
+}
+
+.format-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #718666;
+  box-shadow: 0 0 0 5px rgba(113,134,102,.12);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(360px, .92fr) minmax(420px, 1.08fr);
+  gap: clamp(32px, 5vw, 78px);
+  align-items: start;
+}
+
+.panel-heading,
+.theme-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.panel-heading > div,
+.theme-heading > div {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.panel-heading h2,
+.theme-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: .06em;
+}
+
+.panel-number {
+  min-width: 28px;
+  color: var(--red);
+  border-bottom: 2px solid var(--red);
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.count,
+.theme-heading > span {
+  color: var(--muted);
+  font-family: "PingFang SC", sans-serif;
+  font-size: 11px;
+}
+
+.quick-tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.quick-tools::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: none;
+  margin: 0;
+  padding: 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  color: #5f574f;
+  background: rgba(255,255,255,.58);
+  font-family: "PingFang SC", sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  transition: transform .18s ease, background .18s ease;
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+  background: #fff;
+}
+
+.chip-dark {
+  color: #fff;
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.chip-danger {
+  color: var(--red);
+}
+
+.editor-paper {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(255,253,248,.92);
+  box-shadow: 0 24px 60px rgba(63,48,36,.08);
+}
+
+.editor-caption,
+.device-label {
+  display: flex;
+  justify-content: space-between;
+  padding: 11px 16px;
+  color: #968a7d;
+  font-family: Georgia, serif;
+  font-size: 9px;
+  letter-spacing: .13em;
+}
+
+.editor-caption {
+  border-bottom: 1px solid rgba(67,54,43,.11);
+}
+
+#editor {
+  display: block;
+  width: 100%;
+  min-height: 440px;
+  resize: vertical;
+  padding: 22px 24px 34px;
+  border: 0;
+  outline: 0;
+  color: #302c27;
+  background:
+    linear-gradient(transparent 96%, rgba(75,61,48,.07) 96%);
+  background-size: 100% 29px;
+  font-family: Menlo, Consolas, "PingFang SC", monospace;
+  font-size: 14px;
+  line-height: 1.92;
+}
+
+#editor::placeholder {
+  color: #aaa095;
+}
+
+.paper-fold {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-top: 18px solid #e2d8ca;
+  border-right: 18px solid var(--paper);
+}
+
+.theme-heading {
+  margin-top: 32px;
+}
+
+.theme-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.theme-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  min-height: 92px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  cursor: pointer;
+  text-align: left;
+  background: rgba(255,255,255,.4);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.theme-card.active {
+  border-color: var(--ink);
+  background: var(--white);
+  box-shadow: 6px 6px 0 var(--paper-deep);
+  transform: translate(-3px, -3px);
+}
+
+.swatch {
+  grid-row: 1 / 3;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.45);
+}
+
+.swatch-red { background: #c73b2f; }
+.swatch-blue { background: #258b97; }
+.swatch-ink { background: #34312d; }
+.swatch-amber { background: #b86424; }
+.swatch-plum { background: #a83f62; }
+.swatch-pine { background: #34735b; }
+.swatch-indigo { background: #4059a8; }
+.swatch-gold { background: #9b7827; }
+
+.theme-card strong {
+  font-size: 14px;
+}
+
+.theme-card small {
+  align-self: start;
+  color: var(--muted);
+  font-family: "PingFang SC", sans-serif;
+  font-size: 10px;
+}
+
+.check {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  opacity: 0;
+  color: var(--red);
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+.theme-card.active .check {
+  opacity: 1;
+}
+
+.live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-family: Georgia, serif;
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+
+.live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: pulse 2s infinite;
+}
+
+.preview-paper {
+  min-height: 660px;
+  padding: clamp(36px, 5vw, 68px);
+  border: 1px solid rgba(65,53,42,.13);
+  background: #fff;
+  box-shadow: 0 28px 72px rgba(55,43,33,.11);
+}
+
+.preview-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 0;
+  color: #958a7d;
+  font-family: "PingFang SC", sans-serif;
+  font-size: 10px;
+  text-align: center;
+}
+
+.preview-note span {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.dock-space {
+  height: 150px;
+}
+
+.copy-dock {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  padding: 15px max(22px, calc((100vw - 1304px) / 2)) max(15px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: rgba(243,239,230,.94);
+  box-shadow: 0 -18px 42px rgba(54,42,32,.08);
+  backdrop-filter: blur(16px);
+}
+
+.copy-explainer {
+  display: flex;
+  flex-direction: column;
+  min-width: 255px;
+  font-family: "PingFang SC", sans-serif;
+}
+
+.copy-format {
+  margin-bottom: 4px;
+  color: var(--red);
+  font-family: Georgia, serif;
+  font-size: 9px;
+  letter-spacing: .16em;
+}
+
+.copy-explainer strong {
+  font-size: 13px;
+}
+
+.copy-button {
+  display: flex;
+  align-items: center;
+  width: min(520px, 55vw);
+  height: 76px;
+  padding: 0 22px 0 13px;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  color: #fff;
+  background: var(--red);
+  box-shadow: 8px 8px 0 rgba(91,43,34,.18);
+  transition: transform .16s ease, background .16s ease;
+}
+
+.copy-button:hover {
+  background: var(--red-dark);
+  transform: translateY(-2px);
+}
+
+.copy-button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+  transform: none;
+}
+
+.copy-seal {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-right: 16px;
+  border: 1px solid rgba(255,255,255,.75);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.copy-wording {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.copy-wording strong {
+  font-size: 17px;
+  letter-spacing: .04em;
+}
+
+.copy-wording small {
+  margin-top: 6px;
+  color: rgba(255,255,255,.76);
+  font-family: "PingFang SC", sans-serif;
+  font-size: 10px;
+}
+
+.copy-arrow {
+  font-family: Georgia, serif;
+  font-size: 30px;
+}
+
+.copy-button.working .copy-arrow {
+  animation: nudge .55s ease infinite alternate;
+}
+
+.copy-button.copied {
+  background: #4f7055;
+}
+
+.toast {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: 112px;
+  max-width: calc(100vw - 40px);
+  padding: 13px 18px;
+  opacity: 0;
+  color: #fff;
+  background: var(--ink);
+  box-shadow: 0 10px 28px rgba(37,29,23,.22);
+  font-family: "PingFang SC", sans-serif;
+  font-size: 13px;
+  pointer-events: none;
+  transform: translate(-50%, 14px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast[data-tone="error"] {
+  background: #813b34;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(199,59,47,.24); }
+  50% { box-shadow: 0 0 0 7px rgba(199,59,47,0); }
+}
+
+@keyframes nudge {
+  to { transform: translateX(5px); }
+}
+
+@media (max-width: 1100px) {
+  .theme-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .app-shell {
+    padding: 24px 16px 0;
+  }
+
+  .masthead {
+    grid-template-columns: 62px 1fr;
+    gap: 17px;
+    padding-bottom: 34px;
+  }
+
+  .brand {
+    width: 58px;
+    height: 58px;
+    box-shadow: 6px 6px 0 rgba(73,49,37,.12);
+  }
+
+  .brand-hanzi {
+    top: 6px;
+    left: 14px;
+    font-size: 29px;
+  }
+
+  .brand-en {
+    left: 14px;
+    bottom: 4px;
+    font-size: 6px;
+  }
+
+  .title-block h1 {
+    margin-top: 5px;
+    font-size: 25px;
+  }
+
+  .title-block p {
+    font-size: 11px;
+  }
+
+  .format-badge {
+    display: none;
+  }
+
+  .workspace {
+    display: block;
+  }
+
+  #editor {
+    min-height: 360px;
+  }
+
+  .preview-panel {
+    margin-top: 48px;
+  }
+
+  .preview-paper {
+    min-height: 440px;
+    padding: 30px 24px 40px;
+  }
+
+  .copy-dock {
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  }
+
+  .copy-explainer {
+    display: none;
+  }
+
+  .copy-button {
+    width: 100%;
+    height: 72px;
+  }
+
+  .toast {
+    bottom: 105px;
+  }
+}
+
+@media (max-width: 390px) {
+  .theme-list {
+    gap: 7px;
+  }
+
+  .theme-card {
+    min-height: 84px;
+    padding: 11px 9px;
+    column-gap: 7px;
+  }
+
+  .swatch {
+    width: 12px;
+    height: 12px;
+  }
+
+  .copy-wording strong {
+    font-size: 15px;
+  }
+
+  .copy-wording small {
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="app-shell">
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-hanzi">邓</span>
+        <span class="brand-en">DENG</span>
+      </div>
+      <div class="title-block">
+        <span class="kicker">RICH TEXT DESK / 公众号模式</span>
+        <h1>写好，然后带着格式走。</h1>
+        <p>Markdown 预览与剪贴板共用同一份内联样式。</p>
+      </div>
+      <div class="format-badge">
+        <span class="format-dot"></span>
+        <span>HTML + TEXT</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="editor-panel" aria-labelledby="editor-title">
+        <div class="panel-heading">
+          <div>
+            <span class="panel-number">01</span>
+            <h2 id="editor-title">Markdown</h2>
+          </div>
+          <span id="count" class="count">0 字</span>
+        </div>
+
+        <div class="quick-tools">
+          <button id="pasteButton" class="chip chip-dark" type="button">从剪贴板粘贴</button>
+          <label class="chip" for="fileInput">导入 .md</label>
+          <input id="fileInput" type="file" accept=".md,.markdown,.txt,text/plain" hidden>
+          <button id="sampleButton" class="chip" type="button">示例</button>
+          <button id="clearButton" class="chip chip-danger" type="button">清空</button>
+        </div>
+
+        <div class="editor-paper">
+          <div class="editor-caption">
+            <span>SOURCE</span>
+            <span>自动保存</span>
+          </div>
+          <textarea id="editor" spellcheck="false" aria-label="Markdown 编辑器" placeholder="# 从一个标题开始…"></textarea>
+          <span class="paper-fold" aria-hidden="true"></span>
+        </div>
+
+        <div class="theme-heading">
+          <div>
+            <span class="panel-number">02</span>
+            <h2>版式</h2>
+          </div>
+          <span>复制后保留</span>
+        </div>
+        <div class="theme-list" role="radiogroup" aria-label="公众号版式">
+          <button class="theme-card active" data-theme="cinnabar" role="radio" aria-checked="true" type="button">
+            <span class="swatch swatch-red"></span>
+            <strong>朱砂</strong>
+            <small>编辑部</small>
+            <span class="check">✓</span>
+          </button>
+          <button class="theme-card" data-theme="lake" role="radio" aria-checked="false" type="button">
+            <span class="swatch swatch-blue"></span>
+            <strong>湖蓝</strong>
+            <small>清爽手记</small>
+            <span class="check">✓</span>
+          </button>
+          <button class="theme-card" data-theme="ink" role="radio" aria-checked="false" type="button">
+            <span class="swatch swatch-ink"></span>
+            <strong>松烟</strong>
+            <small>黑白极简</small>
+            <span class="check">✓</span>
+          </button>
+          <button class="theme-card" data-theme="amber" role="radio" aria-checked="false" type="button">
+            <span class="swatch swatch-amber"></span>
+            <strong>琥珀</strong>
+            <small>杂志荧光</small>
+            <span class="check">✓</span>
+          </button>
+          <button class="theme-card" data-theme="plum" role="radio" aria-checked="false" type="button">
+            <span class="swatch swatch-plum"></span>
+            <strong>胭脂</strong>
+            <small>诗笺居中</small>
+            <span class="check">✓</span>
+          </button>
+          <button class="theme-card" data-theme="pine" role="radio" aria-checked="false" type="button">
+            <span class="swatch swatch-pine"></span>
+            <strong>松绿</strong>
+            <small>自然卡片</small>
+            <span class="check">✓</span>
+          </button>
+          <button class="theme-card" data-theme="indigo" role="radio" aria-checked="false" type="button">
+            <span class="swatch swatch-indigo"></span>
+            <strong>群青</strong>
+            <small>圆角标签</small>
+            <span class="check">✓</span>
+          </button>
+          <button class="theme-card" data-theme="gold" role="radio" aria-checked="false" type="button">
+            <span class="swatch swatch-gold"></span>
+            <strong>藤黄</strong>
+            <small>古典双线</small>
+            <span class="check">✓</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="preview-panel" aria-labelledby="preview-title">
+        <div class="panel-heading">
+          <div>
+            <span class="panel-number">03</span>
+            <h2 id="preview-title">公众号预览</h2>
+          </div>
+          <span class="live"><i></i> LIVE</span>
+        </div>
+        <div class="device-label">
+          <span>WECHAT ARTICLE</span>
+          <span>RICH HTML</span>
+        </div>
+        <article id="preview" class="preview-paper" aria-live="polite"></article>
+        <p class="preview-note"><span></span>这里看到的格式，就是粘贴后的格式<span></span></p>
+      </section>
+    </main>
+
+    <div class="dock-space"></div>
+    <footer class="copy-dock">
+      <div class="copy-explainer">
+        <span class="copy-format">DOCX-LIKE COPY</span>
+        <strong>复制后直接粘贴到公众号编辑器</strong>
+      </div>
+      <button id="copyButton" class="copy-button" type="button">
+        <span class="copy-seal">复制</span>
+        <span class="copy-wording">
+          <strong>一键复制富文本</strong>
+          <small>保留标题 · 颜色 · 引用 · 列表</small>
+        </span>
+        <span class="copy-arrow">→</span>
+      </button>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script data-bundle="markdown">
+const THEMES = {
+  cinnabar: {
+    name: '朱砂编辑部',
+    accent: '#C73B2F',
+    accentSoft: '#F8ECE8',
+    ink: '#29241F',
+    muted: '#756C62',
+    border: '#E8DED2',
+    quote: '#FBF4ED',
+    code: '#24211F',
+    codeText: '#F7F1E8',
+    heading: 'seal'
+  },
+  lake: {
+    name: '湖蓝手记',
+    accent: '#258B97',
+    accentSoft: '#E8F4F4',
+    ink: '#243033',
+    muted: '#657579',
+    border: '#D9E7E7',
+    quote: '#EFF7F7',
+    code: '#20383C',
+    codeText: '#EDF8F8',
+    heading: 'block'
+  },
+  ink: {
+    name: '松烟极简',
+    accent: '#34312D',
+    accentSoft: '#F0EEE9',
+    ink: '#282624',
+    muted: '#77716A',
+    border: '#DDD8D0',
+    quote: '#F5F3EF',
+    code: '#242321',
+    codeText: '#F5F2EC',
+    heading: 'line'
+  },
+  amber: {
+    name: '琥珀杂志',
+    accent: '#B86424',
+    accentSoft: '#F8ECDC',
+    ink: '#3B2C21',
+    muted: '#806E60',
+    border: '#E8D5BF',
+    quote: '#FBF4E9',
+    code: '#3A2C25',
+    codeText: '#F9EEE3',
+    heading: 'marker',
+    divider: '✦'
+  },
+  plum: {
+    name: '胭脂诗笺',
+    accent: '#A83F62',
+    accentSoft: '#F8E9EF',
+    ink: '#36272D',
+    muted: '#806A73',
+    border: '#E9D4DC',
+    quote: '#FBF0F4',
+    code: '#3D2831',
+    codeText: '#FAEDF2',
+    heading: 'center',
+    divider: '❖'
+  },
+  pine: {
+    name: '松绿札记',
+    accent: '#34735B',
+    accentSoft: '#E8F1EC',
+    ink: '#26372F',
+    muted: '#667A70',
+    border: '#D5E5DC',
+    quote: '#EEF5F1',
+    code: '#203B31',
+    codeText: '#EDF6F1',
+    heading: 'frame',
+    divider: '◇'
+  },
+  indigo: {
+    name: '群青理性',
+    accent: '#4059A8',
+    accentSoft: '#E9ECF8',
+    ink: '#272D43',
+    muted: '#68708A',
+    border: '#D8DDF0',
+    quote: '#F0F2FA',
+    code: '#252E52',
+    codeText: '#EEF1FB',
+    heading: 'pill',
+    divider: '●'
+  },
+  gold: {
+    name: '藤黄古典',
+    accent: '#9B7827',
+    accentSoft: '#F7F0DB',
+    ink: '#3C3526',
+    muted: '#7F735B',
+    border: '#E7DDBE',
+    quote: '#FAF6E8',
+    code: '#373126',
+    codeText: '#F8F2E4',
+    heading: 'classic',
+    divider: '◆'
+  }
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function safeUrl(value) {
+  const url = String(value || '').trim()
+  if (/^https?:\/\//i.test(url)) return escapeHtml(url)
+  return ''
+}
+
+function typography(theme) {
+  return [
+    "font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif",
+    `color:${theme.ink}`,
+    'font-size:16px',
+    'line-height:1.9',
+    'letter-spacing:.04em',
+    'word-break:break-word'
+  ].join(';')
+}
+
+function inlineStyle(theme) {
+  return {
+    strong: `font-weight:700;color:${theme.accent}`,
+    em: `font-style:italic;color:${theme.muted}`,
+    del: `color:${theme.muted};text-decoration:line-through`,
+    mark: `background:linear-gradient(transparent 55%,${theme.accentSoft} 55%);color:${theme.ink};padding:0 2px`,
+    code: `font-family:Menlo,Consolas,monospace;font-size:13px;color:${theme.accent};background:${theme.accentSoft};padding:2px 6px;border-radius:4px`,
+    link: `color:${theme.accent};text-decoration:none;border-bottom:1px solid ${theme.accent}`,
+    image: 'display:block;max-width:100%;height:auto;margin:22px auto;border-radius:4px'
+  }
+}
+
+function renderInline(source, theme) {
+  const styles = inlineStyle(theme)
+  const tokens = []
+  const hold = (html) => {
+    const key = `\uE000${tokens.length}\uE001`
+    tokens.push({ key, html })
+    return key
+  }
+
+  let text = String(source || '')
+
+  text = text.replace(/`([^`\n]+)`/g, (_, code) =>
+    hold(`<code style="${styles.code}">${escapeHtml(code)}</code>`)
+  )
+
+  text = text.replace(/!\[([^\]]*)\]\(([^\s)]+)(?:\s+["']([^"']*)["'])?\)/g, (_, alt, url) => {
+    const src = safeUrl(url)
+    if (!src) return escapeHtml(alt)
+    return hold(`<img src="${src}" alt="${escapeHtml(alt)}" style="${styles.image}" />`)
+  })
+
+  text = text.replace(/\[([^\]]+)\]\(([^\s)]+)(?:\s+["']([^"']*)["'])?\)/g, (_, label, url) => {
+    const href = safeUrl(url)
+    if (!href) return label
+    return hold(`<a href="${href}" style="${styles.link}">${escapeHtml(label)}</a>`)
+  })
+
+  text = escapeHtml(text)
+  text = text
+    .replace(/\*\*([^*\n]+)\*\*/g, `<strong style="${styles.strong}">$1</strong>`)
+    .replace(/__([^_\n]+)__/g, `<strong style="${styles.strong}">$1</strong>`)
+    .replace(/~~([^~\n]+)~~/g, `<del style="${styles.del}">$1</del>`)
+    .replace(/==([^=\n]+)==/g, `<span style="${styles.mark}">$1</span>`)
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, `$1<em style="${styles.em}">$2</em>`)
+    .replace(/(^|[^_])_([^_\n]+)_/g, `$1<em style="${styles.em}">$2</em>`)
+
+  tokens.forEach(({ key, html }) => {
+    text = text.replace(key, html)
+  })
+
+  return text
+}
+
+function headingStyle(level, theme) {
+  const sizes = { 1: '26px', 2: '21px', 3: '18px', 4: '17px', 5: '16px', 6: '16px' }
+  const base = `font-weight:700;font-size:${sizes[level]};line-height:1.45;letter-spacing:.05em;margin:34px 0 18px;color:${theme.ink}`
+
+  if (level === 1) {
+    if (theme.heading === 'classic') {
+      return `${base};text-align:center;color:${theme.accent};padding:14px 0;border-top:3px double ${theme.border};border-bottom:3px double ${theme.border};letter-spacing:.14em`
+    }
+    if (theme.heading === 'center') {
+      return `${base};text-align:center;color:${theme.accent};padding:0 22px 14px;border-bottom:1px solid ${theme.accent}`
+    }
+    return `${base};text-align:center;padding:0 0 16px;border-bottom:1px solid ${theme.border}`
+  }
+  if (theme.heading === 'block' && level === 2) {
+    return `${base};display:inline-block;color:#fff;background:${theme.accent};padding:7px 14px;border-radius:2px`
+  }
+  if (theme.heading === 'seal' && level === 2) {
+    return `${base};padding:2px 0 2px 13px;border-left:4px solid ${theme.accent};color:${theme.accent}`
+  }
+  if (theme.heading === 'marker' && level === 2) {
+    return `${base};display:inline-block;color:${theme.ink};padding:0 5px 3px;background:linear-gradient(transparent 55%,${theme.accentSoft} 55%);border-bottom:2px solid ${theme.accent}`
+  }
+  if (theme.heading === 'center' && level === 2) {
+    return `${base};text-align:center;color:${theme.accent};padding:9px 0;border-top:1px solid ${theme.border};border-bottom:1px solid ${theme.border};letter-spacing:.12em`
+  }
+  if (theme.heading === 'frame' && level === 2) {
+    return `${base};display:inline-block;color:${theme.accent};padding:7px 15px;border:1px solid ${theme.accent};box-shadow:5px 5px 0 ${theme.accentSoft}`
+  }
+  if (theme.heading === 'pill' && level === 2) {
+    return `${base};display:inline-block;color:#fff;background:${theme.accent};padding:7px 17px;border-radius:99px`
+  }
+  if (theme.heading === 'classic' && level === 2) {
+    return `${base};text-align:center;color:${theme.accent};padding:11px 0;border-top:1px solid ${theme.border};border-bottom:1px solid ${theme.border};letter-spacing:.14em`
+  }
+  return `${base};padding-bottom:8px;border-bottom:2px solid ${theme.accent}`
+}
+
+function splitTableRow(line) {
+  const cells = []
+  let current = ''
+  const value = String(line || '').trim()
+  for (let i = 0; i < value.length; i += 1) {
+    if (value[i] === '\\' && value[i + 1] === '|') {
+      current += '|'
+      i += 1
+    } else if (value[i] === '|') {
+      cells.push(current.trim())
+      current = ''
+    } else {
+      current += value[i]
+    }
+  }
+  cells.push(current.trim())
+  if (!cells[0]) cells.shift()
+  if (!cells[cells.length - 1]) cells.pop()
+  return cells
+}
+
+function isTableDelimiter(line) {
+  const cells = splitTableRow(line)
+  return cells.length > 1 && cells.every((cell) => /^:?-{3,}:?$/.test(cell.replace(/\s/g, '')))
+}
+
+function isTableStart(lines, index) {
+  if (index + 1 >= lines.length || !String(lines[index] || '').includes('|')) return false
+  const header = splitTableRow(lines[index])
+  const divider = splitTableRow(lines[index + 1])
+  return header.length > 1 && header.length === divider.length && isTableDelimiter(lines[index + 1])
+}
+
+function tableAlignment(token) {
+  const value = String(token || '').replace(/\s/g, '')
+  if (value.startsWith(':') && value.endsWith(':')) return 'center'
+  if (value.endsWith(':')) return 'right'
+  return 'left'
+}
+
+function graphLabel(value) {
+  const text = String(value || '').trim().replace(/^['"]|['"]$/g, '')
+  const pairs = [['[', ']'], ['(', ')'], ['{', '}']]
+  for (const pair of pairs) {
+    const start = text.indexOf(pair[0])
+    if (start > 0 && text.endsWith(pair[1])) return text.slice(start + 1, -1).trim()
+  }
+  return text
+}
+
+function renderFlowGraph(lines, theme) {
+  const edges = []
+  const arrows = ['-->', '==>', '->', '=>']
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim()
+    if (!line || /^(graph|flowchart)\b/i.test(line)) return
+    let arrow = ''
+    let arrowAt = -1
+    for (const candidate of arrows) {
+      const position = line.indexOf(candidate)
+      if (position >= 0 && (arrowAt < 0 || position < arrowAt)) {
+        arrow = candidate
+        arrowAt = position
+      }
+    }
+    if (arrowAt < 0) return
+    const from = graphLabel(line.slice(0, arrowAt))
+    const to = graphLabel(line.slice(arrowAt + arrow.length))
+    if (from && to) edges.push([from, to])
+  })
+  if (!edges.length) return ''
+  const rows = edges.map(([from, to]) => `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0"><span style="flex:1;padding:10px 12px;border:1px solid ${theme.border};background:#fff;color:${theme.ink};text-align:center;border-radius:4px">${escapeHtml(from)}</span><span style="color:${theme.accent};font-size:20px;font-weight:700">→</span><span style="flex:1;padding:10px 12px;border:1px solid ${theme.accent};background:${theme.accentSoft};color:${theme.ink};text-align:center;border-radius:4px">${escapeHtml(to)}</span></div>`)
+  return `<div style="margin:24px 0;padding:16px;border:1px solid ${theme.border};background:${theme.quote};border-radius:6px"><div style="margin-bottom:12px;color:${theme.accent};font-size:11px;font-weight:700;letter-spacing:.14em">FLOW GRAPH</div>${rows.join('')}</div>`
+}
+
+function renderBarChart(lines, theme) {
+  const entries = []
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim().replace(/%$/, '')
+    if (!line) return
+    let splitAt = Math.max(line.lastIndexOf(':'), line.lastIndexOf('|'))
+    if (splitAt < 0) splitAt = line.lastIndexOf(' ')
+    if (splitAt <= 0) return
+    const label = line.slice(0, splitAt).trim()
+    const value = Number(line.slice(splitAt + 1).trim())
+    if (label && Number.isFinite(value)) entries.push([label, value])
+  })
+  if (!entries.length) return ''
+  const maximum = Math.max(...entries.map((entry) => Math.abs(entry[1])), 1)
+  const rows = entries.map(([label, value]) => {
+    const width = Math.max(4, Math.round(Math.abs(value) / maximum * 100))
+    return `<div style="margin:13px 0"><div style="display:flex;justify-content:space-between;margin-bottom:6px;color:${theme.ink};font-size:13px"><span>${escapeHtml(label)}</span><strong style="color:${theme.accent}">${escapeHtml(value)}</strong></div><div style="height:10px;overflow:hidden;background:${theme.accentSoft};border-radius:99px"><span style="display:block;width:${width}%;height:10px;background:${theme.accent};border-radius:99px"></span></div></div>`
+  })
+  return `<div style="margin:24px 0;padding:16px 18px;border:1px solid ${theme.border};background:#fff;border-radius:6px"><div style="margin-bottom:12px;color:${theme.accent};font-size:11px;font-weight:700;letter-spacing:.14em">DATA CHART</div>${rows.join('')}</div>`
+}
+function isBlockStart(line) {
+  return /^(#{1,6})\s+/.test(line) ||
+    /^\s*```/.test(line) ||
+    /^\s*>\s?/.test(line) ||
+    /^\s*([-*+])\s+/.test(line) ||
+    /^\s*\d+[.)]\s+/.test(line) ||
+    /^\s*((-{3,})|(\*{3,})|(_{3,}))\s*$/.test(line)
+}
+
+function renderMarkdown(markdown, themeKey) {
+  const theme = THEMES[themeKey] || THEMES.cinnabar
+  const lines = String(markdown || '').replace(/\r\n?/g, '\n').split('\n')
+  const out = []
+  let index = 0
+
+  while (index < lines.length) {
+    const line = lines[index]
+
+    if (!line.trim()) {
+      index += 1
+      continue
+    }
+
+    const fence = line.match(/^\s*```\s*([\w-]*)\s*$/)
+    if (fence) {
+      const codeLines = []
+      index += 1
+      while (index < lines.length && !/^\s*```\s*$/.test(lines[index])) {
+        codeLines.push(lines[index])
+        index += 1
+      }
+      if (index < lines.length) index += 1
+      const languageKey = String(fence[1] || '').toLowerCase()
+      if (['graph', 'flow', 'mermaid'].includes(languageKey)) {
+        const graph = renderFlowGraph(codeLines, theme)
+        if (graph) {
+          out.push(graph)
+          continue
+        }
+      }
+      if (['chart', 'bar'].includes(languageKey)) {
+        const chart = renderBarChart(codeLines, theme)
+        if (chart) {
+          out.push(chart)
+          continue
+        }
+      }
+      const language = languageKey ? `<span style="display:block;color:${theme.accent};font-size:11px;letter-spacing:.12em;margin-bottom:10px">${escapeHtml(languageKey.toUpperCase())}</span>` : ''
+      out.push(`<pre style="margin:24px 0;padding:18px 20px;overflow-x:auto;border-radius:6px;background:${theme.code};color:${theme.codeText};font-family:Menlo,Consolas,monospace;font-size:13px;line-height:1.7;white-space:pre-wrap">${language}<code>${escapeHtml(codeLines.join('\n'))}</code></pre>`)
+      continue
+    }
+
+    const heading = line.match(/^(#{1,6})\s+(.+)$/)
+    if (heading) {
+      const level = heading[1].length
+      out.push(`<h${level} style="${headingStyle(level, theme)}">${renderInline(heading[2], theme)}</h${level}>`)
+      index += 1
+      continue
+    }
+
+    if (/^\s*((-{3,})|(\*{3,})|(_{3,}))\s*$/.test(line)) {
+      out.push(`<div style="display:flex;align-items:center;gap:10px;margin:34px 0"><span style="height:1px;background:${theme.border};flex:1"></span><span style="color:${theme.accent};font-size:12px">${theme.divider || '◆'}</span><span style="height:1px;background:${theme.border};flex:1"></span></div>`)
+      index += 1
+      continue
+    }
+
+    if (isTableStart(lines, index)) {
+      const headers = splitTableRow(lines[index])
+      const alignments = splitTableRow(lines[index + 1]).map(tableAlignment)
+      const rows = []
+      index += 2
+      while (index < lines.length && lines[index].trim() && lines[index].includes('|')) {
+        const cells = splitTableRow(lines[index])
+        while (cells.length < headers.length) cells.push('')
+        rows.push(cells.slice(0, headers.length))
+        index += 1
+      }
+      const minWidth = Math.max(360, headers.length * 120)
+      const headerHtml = headers.map((cell, cellIndex) => `<th style="padding:10px 12px;border-right:1px solid ${theme.border};border-bottom:2px solid ${theme.accent};background:${theme.accentSoft};color:${theme.ink};font-weight:700;text-align:${alignments[cellIndex]}">${renderInline(cell, theme)}</th>`).join('')
+      const bodyHtml = rows.map((cells, rowIndex) => `<tr style="background:${rowIndex % 2 ? theme.quote : '#fff'}">${cells.map((cell, cellIndex) => `<td style="padding:10px 12px;border-right:1px solid ${theme.border};border-bottom:1px solid ${theme.border};color:${theme.ink};text-align:${alignments[cellIndex]}">${renderInline(cell, theme)}</td>`).join('')}</tr>`).join('')
+      out.push(`<div style="margin:24px 0;overflow-x:auto;border:1px solid ${theme.border};border-radius:5px"><table style="width:100%;min-width:${minWidth}px;border-collapse:collapse;border-spacing:0;font-size:14px;line-height:1.65"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`)
+      continue
+    }
+
+    if (/^\s*>\s?/.test(line)) {
+      const quoteLines = []
+      while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
+        quoteLines.push(lines[index].replace(/^\s*>\s?/, ''))
+        index += 1
+      }
+      out.push(`<blockquote style="margin:24px 0;padding:16px 18px;border-left:4px solid ${theme.accent};background:${theme.quote};color:${theme.muted};font-size:15px;line-height:1.85">${quoteLines.map((item) => renderInline(item, theme)).join('<br />')}</blockquote>`)
+      continue
+    }
+
+    const unordered = line.match(/^\s*[-*+]\s+(.+)$/)
+    if (unordered) {
+      const items = []
+      while (index < lines.length) {
+        const matched = lines[index].match(/^\s*[-*+]\s+(.+)$/)
+        if (!matched) break
+        const task = matched[1].match(/^\[([ xX])\]\s+(.+)$/)
+        if (task) {
+          const mark = task[1].toLowerCase() === 'x' ? '✓' : '○'
+          items.push(`<li style="margin:9px 0;list-style:none"><span style="display:inline-block;width:24px;color:${theme.accent};font-weight:700">${mark}</span>${renderInline(task[2], theme)}</li>`)
+        } else {
+          items.push(`<li style="margin:9px 0;padding-left:4px">${renderInline(matched[1], theme)}</li>`)
+        }
+        index += 1
+      }
+      out.push(`<ul style="margin:20px 0;padding-left:24px;color:${theme.ink};line-height:1.85">${items.join('')}</ul>`)
+      continue
+    }
+
+    const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/)
+    if (ordered) {
+      const items = []
+      while (index < lines.length) {
+        const matched = lines[index].match(/^\s*\d+[.)]\s+(.+)$/)
+        if (!matched) break
+        items.push(`<li style="margin:9px 0;padding-left:5px">${renderInline(matched[1], theme)}</li>`)
+        index += 1
+      }
+      out.push(`<ol style="margin:20px 0;padding-left:28px;color:${theme.ink};line-height:1.85">${items.join('')}</ol>`)
+      continue
+    }
+
+    const paragraph = [line.trim()]
+    index += 1
+    while (index < lines.length && lines[index].trim() && !isBlockStart(lines[index]) && !isTableStart(lines, index)) {
+      paragraph.push(lines[index].trim())
+      index += 1
+    }
+    out.push(`<p style="margin:16px 0;color:${theme.ink};font-size:16px;line-height:1.95;text-align:justify;letter-spacing:.04em">${renderInline(paragraph.join(' '), theme)}</p>`)
+  }
+
+  if (!out.length) {
+    out.push(`<p style="margin:0;color:${theme.muted};text-align:center;padding:48px 0">预览会在这里亮起来</p>`)
+  }
+
+  return `<div style="${typography(theme)};padding:4px 0">${out.join('')}</div>`
+}
+
+function toPlainText(markdown) {
+  return String(markdown || '')
+    .replace(/^\s*```[^\n]*$/gm, '')
+    .replace(/^\s*#{1,6}\s+/gm, '')
+    .replace(/^\s*>\s?/gm, '')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+[.)]\s+/gm, '')
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/(`{1,3}|\*\*|__|~~|==)/g, '')
+    .replace(/(^|\s)[*_]([^*_\n]+)[*_](?=\s|$)/g, '$1$2')
+    .replace(/^\s*((-{3,})|(\*{3,})|(_{3,}))\s*$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+const MarkdownEngine = {
+  THEMES,
+  escapeHtml,
+  renderInline,
+  renderMarkdown,
+  toPlainText
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = MarkdownEngine
+}
+
+if (typeof window !== 'undefined') {
+  window.MarkdownEngine = MarkdownEngine
+}
+
+  </script>
+  <script data-bundle="app">
+(() => {
+  'use strict'
+
+  const engine = window.MarkdownEngine
+  if (!engine) throw new Error('MarkdownEngine 未加载')
+
+  const SAMPLE = `# 写给仍在认真表达的人
+
+## 好排版，不该打断写作
+
+我们把 Markdown **切成结构**，再把结构安静地放回版面。你只管写，剩下的交给排版邓。
+
+> 内容先于形式，但好的形式，会让内容被认真读完。
+
+### 三步完成一篇推文
+
+- 粘贴或输入 Markdown
+- 选择一种公众号版式
+- 一键复制富文本
+
+1. 标题有呼吸感
+2. 正文保持舒适行距
+3. 引用与代码都有清楚层级
+
+---
+
+\`\`\`javascript
+const idea = '先写下来'
+const article = light(idea)
+\`\`\`
+
+### 表格与图表
+
+| 指标 | 当前值 | 趋势 |
+| :--- | ---: | :---: |
+| 阅读 | 8,640 | ↑ |
+| 收藏 | 1,280 | ↑ |
+| 分享 | 360 | — |
+
+\`\`\`chart
+阅读: 86
+收藏: 64
+分享: 38
+\`\`\`
+
+#### graph：基础流程
+
+\`\`\`graph
+A[灵感] --> B[Markdown]
+B[Markdown] --> C[公众号]
+\`\`\`
+
+#### flow：工作流
+
+\`\`\`flow
+A[选题] --> B[写作]
+B[写作] --> C[排版]
+\`\`\`
+
+#### mermaid：兼容写法
+
+\`\`\`mermaid
+graph TD
+A[草稿] --> B[预览]
+B[预览] --> C[复制]
+\`\`\`
+
+愿每一次表达，都被好好看见。`
+
+  const $ = (selector) => document.querySelector(selector)
+  const editor = $('#editor')
+  const preview = $('#preview')
+  const count = $('#count')
+  const toast = $('#toast')
+  const copyButton = $('#copyButton')
+  const themeButtons = Array.from(document.querySelectorAll('.theme-card'))
+  let currentTheme = 'cinnabar'
+  let hasIncomingTheme = false
+  let toastTimer = 0
+
+  function readIncomingDraft() {
+    const params = new URLSearchParams(window.location.hash.slice(1))
+    const incoming = params.get('md')
+    const theme = params.get('theme')
+    if (theme && engine.THEMES[theme]) {
+      currentTheme = theme
+      hasIncomingTheme = true
+    }
+    if (incoming !== null) {
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search)
+      } catch (_) {}
+      return incoming
+    }
+    try {
+      return localStorage.getItem('paibandeng:h5:draft:v1') || SAMPLE
+    } catch (_) {
+      return SAMPLE
+    }
+  }
+
+  function saveDraft() {
+    try {
+      localStorage.setItem('paibandeng:h5:draft:v1', editor.value)
+      localStorage.setItem('paibandeng:h5:theme:v1', currentTheme)
+    } catch (_) {}
+  }
+
+  function render() {
+    preview.innerHTML = engine.renderMarkdown(editor.value, currentTheme)
+    count.textContent = `${editor.value.length} 字`
+    copyButton.disabled = !editor.value.trim()
+    saveDraft()
+  }
+
+  function setTheme(theme) {
+    if (!engine.THEMES[theme]) return
+    currentTheme = theme
+    themeButtons.forEach((button) => {
+      const active = button.dataset.theme === theme
+      button.classList.toggle('active', active)
+      button.setAttribute('aria-checked', String(active))
+    })
+    render()
+  }
+
+  function notify(message, tone = 'success') {
+    clearTimeout(toastTimer)
+    toast.textContent = message
+    toast.dataset.tone = tone
+    toast.classList.add('show')
+    toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2600)
+  }
+
+  async function modernRichCopy(html, plain) {
+    if (!navigator.clipboard || !window.ClipboardItem || !window.isSecureContext) {
+      throw new Error('modern clipboard unavailable')
+    }
+    const item = new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([plain], { type: 'text/plain' })
+    })
+    await navigator.clipboard.write([item])
+    return 'clipboard-item'
+  }
+
+  function selectionRichCopy(html) {
+    const staging = document.createElement('div')
+    staging.setAttribute('contenteditable', 'true')
+    staging.setAttribute('aria-hidden', 'true')
+    staging.style.cssText = 'position:fixed;left:-10000px;top:0;width:375px;background:#fff;'
+    staging.innerHTML = html
+    document.body.appendChild(staging)
+
+    const selection = window.getSelection()
+    const range = document.createRange()
+    range.selectNodeContents(staging)
+    selection.removeAllRanges()
+    selection.addRange(range)
+
+    let copied = false
+    try {
+      copied = document.execCommand('copy')
+    } finally {
+      selection.removeAllRanges()
+      staging.remove()
+    }
+    if (!copied) throw new Error('selection copy failed')
+    return 'selection'
+  }
+
+  async function copyRichText() {
+    if (!editor.value.trim()) return
+    const html = preview.innerHTML
+    const plain = engine.toPlainText(editor.value)
+    copyButton.classList.add('working')
+
+    try {
+      let method = ''
+      try {
+        method = await modernRichCopy(html, plain)
+      } catch (_) {
+        method = selectionRichCopy(html)
+      }
+      copyButton.dataset.copyMethod = method
+      copyButton.classList.add('copied')
+      notify('富文本已复制，可直接粘贴到公众号')
+      window.setTimeout(() => copyButton.classList.remove('copied'), 1400)
+    } catch (error) {
+      console.error(error)
+      notify('浏览器阻止了复制，请长按预览内容复制', 'error')
+    } finally {
+      copyButton.classList.remove('working')
+    }
+  }
+
+  async function pasteMarkdown() {
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.readText) throw new Error('read unavailable')
+      const text = await navigator.clipboard.readText()
+      if (!text) return notify('剪贴板里没有文字', 'error')
+      editor.value = text
+      render()
+      notify('已粘贴并完成排版')
+    } catch (_) {
+      editor.focus()
+      notify('请长按输入框，选择“粘贴”', 'error')
+    }
+  }
+
+  editor.value = readIncomingDraft()
+  try {
+    const storedTheme = localStorage.getItem('paibandeng:h5:theme:v1')
+    if (!hasIncomingTheme && storedTheme && engine.THEMES[storedTheme]) currentTheme = storedTheme
+  } catch (_) {}
+
+  editor.addEventListener('input', render)
+  $('#pasteButton').addEventListener('click', pasteMarkdown)
+  $('#sampleButton').addEventListener('click', () => {
+    if (editor.value !== SAMPLE && !window.confirm('用示例替换当前内容？')) return
+    editor.value = SAMPLE
+    render()
+  })
+  $('#clearButton').addEventListener('click', () => {
+    if (editor.value && !window.confirm('清空当前内容？')) return
+    editor.value = ''
+    render()
+    editor.focus()
+  })
+  $('#fileInput').addEventListener('change', async (event) => {
+    const file = event.target.files && event.target.files[0]
+    if (!file) return
+    editor.value = await file.text()
+    render()
+    event.target.value = ''
+    notify('Markdown 文件已导入')
+  })
+  themeButtons.forEach((button) => button.addEventListener('click', () => setTheme(button.dataset.theme)))
+  copyButton.addEventListener('click', copyRichText)
+
+  setTheme(currentTheme)
+})()
+
+  </script>
+</body>
+</html>
