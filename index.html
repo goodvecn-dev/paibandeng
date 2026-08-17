@@ -27,6 +27,10 @@ SOFTWARE.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#f3efe6">
+  <meta name="description" content="排版邓：纯离线单文件 Markdown 转微信公众号富文本排版工具，支持主题版式与一键复制。">
+  <meta property="og:title" content="排版邓 · Markdown 转公众号富文本">
+  <meta property="og:description" content="纯离线单文件 Markdown 转微信公众号富文本排版工具。">
+  <meta property="og:type" content="website">
   <title>排版邓 · 富文本复制</title>
   <style data-bundle="styles">
 :root {
@@ -703,9 +707,9 @@ button {
   <div class="noise" aria-hidden="true"></div>
   <div class="app-shell">
     <header class="masthead">
-      <div class="brand">
-        <span class="brand-hanzi">邓</span>
-        <span class="brand-en">DENG</span>
+      <div class="brand" role="img" aria-label="排版邓">
+        <span class="brand-hanzi" aria-hidden="true">邓</span>
+        <span class="brand-en" aria-hidden="true">DENG</span>
       </div>
       <div class="title-block">
         <span class="kicker">RICH TEXT DESK / 公众号模式</span>
@@ -1413,6 +1417,7 @@ B[预览] --> C[复制]
   let currentTheme = 'cinnabar'
   let hasIncomingTheme = false
   let toastTimer = 0
+  let storageWarned = false
 
   function readIncomingDraft() {
     const params = new URLSearchParams(window.location.hash.slice(1))
@@ -1439,7 +1444,13 @@ B[预览] --> C[复制]
     try {
       localStorage.setItem('paibandeng:h5:draft:v1', editor.value)
       localStorage.setItem('paibandeng:h5:theme:v1', currentTheme)
-    } catch (_) {}
+      storageWarned = false
+    } catch (_) {
+      if (!storageWarned) {
+        storageWarned = true
+        notify('本地草稿无法保存（存储受限或已满）', 'error')
+      }
+    }
   }
 
   function render() {
@@ -1572,6 +1583,23 @@ B[预览] --> C[复制]
     notify('Markdown 文件已导入')
   })
   themeButtons.forEach((button) => button.addEventListener('click', () => setTheme(button.dataset.theme)))
+  const themeGroup = document.querySelector('.theme-list')
+  if (themeGroup) {
+    themeGroup.addEventListener('keydown', (event) => {
+      const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End']
+      if (!keys.includes(event.key)) return
+      event.preventDefault()
+      const index = themeButtons.findIndex((button) => button.dataset.theme === currentTheme)
+      let next = index < 0 ? 0 : index
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % themeButtons.length
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index - 1 + themeButtons.length) % themeButtons.length
+      if (event.key === 'Home') next = 0
+      if (event.key === 'End') next = themeButtons.length - 1
+      const target = themeButtons[next]
+      setTheme(target.dataset.theme)
+      target.focus()
+    })
+  }
   copyButton.addEventListener('click', copyRichText)
 
   setTheme(currentTheme)
